@@ -5,7 +5,7 @@ from datetime import date
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship
-from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
+from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user
 from forms import CreatePostForm, RegisterForm, LoginForm, CommentForm
 from flask_gravatar import Gravatar
 from functools import wraps
@@ -36,7 +36,7 @@ gravatar = Gravatar(app, size=100, rating='g', default='retro', force_default=Fa
                     force_lower=False, use_ssl=False, base_url=None)
 
 
-# Decorator for admin_only
+# CONFIGURE DECORATOR FOR ADMIN ONLY
 def admin_only(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -47,6 +47,7 @@ def admin_only(f):
 
 
 # CONFIGURE TABLES
+# TABLE POST
 class BlogPost(db.Model):
     __tablename__ = "blog_posts"
     id = db.Column(db.Integer, primary_key=True)
@@ -60,6 +61,7 @@ class BlogPost(db.Model):
     comments = relationship("Comment", back_populates="parent_post")
 
 
+# TABLE USER
 class User(UserMixin, db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
@@ -70,6 +72,7 @@ class User(UserMixin, db.Model):
     comments = relationship("Comment", back_populates="comment_author")
 
 
+# TABLE COMMENT
 class Comment(db.Model):
     __tablename__ = "comments"
     id = db.Column(db.Integer, primary_key=True)
@@ -82,13 +85,14 @@ class Comment(db.Model):
 
 # db.create_all()
 
-
+# HOME PAGE
 @app.route('/')
 def get_all_posts():
     posts = BlogPost.query.all()
     return render_template("index.html", all_posts=posts)
 
 
+# REGISTER PAGE
 @app.route('/register', methods=["POST", "GET"])
 def register():
     register_form = RegisterForm()
@@ -106,6 +110,7 @@ def register():
     return render_template("register.html", form=register_form)
 
 
+# LOGIN PAGE
 @app.route('/login', methods=["POST", "GET"])
 def login():
     form = LoginForm()
@@ -124,12 +129,14 @@ def login():
     return render_template("login.html", form=form)
 
 
+# LOGOUT PAGE
 @app.route('/logout')
 def logout():
     logout_user()
     return redirect(url_for('get_all_posts'))
 
 
+# SHOW POST PAGE
 @app.route("/post/<int:post_id>", methods=["POST", "GET"])
 def show_post(post_id):
     requested_post = BlogPost.query.get(post_id)
@@ -148,16 +155,19 @@ def show_post(post_id):
     return render_template("post.html", post=requested_post, form=comment_form)
 
 
+# PAGE ABOUT
 @app.route("/about")
 def about():
     return render_template("about.html")
 
 
+# PAGE CONTACT
 @app.route("/contact")
 def contact():
     return render_template("contact.html")
 
 
+# PAGE FOR WHITE NEW POST(ADMIN_ONLY)
 @app.route("/new-post", methods=["POST", "GET"])
 @admin_only
 def add_new_post():
@@ -177,6 +187,7 @@ def add_new_post():
     return render_template("make-post.html", form=form)
 
 
+# PAGE FOR EDIT POST(ADMIN ONLY)
 @app.route("/edit-post/<int:post_id>", methods=["POST", "GET"])
 @admin_only
 def edit_post(post_id):
@@ -199,6 +210,7 @@ def edit_post(post_id):
     return render_template("make-post.html", form=edit_form)
 
 
+# FUNCTION FOR DELETE POST(ADMIN ONLY)
 @app.route("/delete/<int:post_id>")
 @admin_only
 def delete_post(post_id):
